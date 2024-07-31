@@ -1,0 +1,60 @@
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score
+import joblib
+
+# Data Preprocessing
+def preprocess_data(input_path, output_path):
+    data = pd.read_csv(input_path)
+    
+    # Example preprocessing steps
+    # Filling missing values
+    data.fillna(data.mean(), inplace=True)
+    
+    # Normalizing data (example)
+    data['previous_scores'] = data['previous_scores'] / 100
+    
+    # Encoding categorical variables (example)
+    data = pd.get_dummies(data, columns=['gender', 'learning_style'])
+    
+    data.to_csv(output_path, index=False)
+
+# Model Training
+def train_model(data_path, model_path):
+    data = pd.read_csv(data_path)
+    X = data.drop(['student_id', 'feedback'], axis=1)
+    y = data['feedback']
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    
+    model = RandomForestClassifier()
+    model.fit(X_train, y_train)
+    
+    joblib.dump(model, model_path)
+
+# Model Evaluation
+def evaluate_model(data_path, model_path):
+    data = pd.read_csv(data_path)
+    X = data.drop(['student_id', 'feedback'], axis=1)
+    y = data['feedback']
+    _, X_test, _, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    
+    model = joblib.load(model_path)
+    y_pred = model.predict(X_test)
+    
+    accuracy = accuracy_score(y_test, y_pred)
+    print(f'Model Accuracy: {accuracy:.2f}')
+
+
+if __name__ == "__main__":
+    input_data_path = 'data/student_data.csv'
+    preprocessed_data_path = 'data/preprocessed_student_data.csv'
+    model_path = 'models/recommendation_model.pkl'
+    
+
+    preprocess_data(input_data_path, preprocessed_data_path)
+ 
+    train_model(preprocessed_data_path, model_path)
+    
+  
+    evaluate_model(preprocessed_data_path, model_path)
